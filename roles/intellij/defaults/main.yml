@@ -1,0 +1,6 @@
+---
+# Supported values: community, ultimate
+intellij_edition: community
+
+# Supported values: latest, 2025.2, 2025.2.x, 2025.2.4
+intellij_version: latest

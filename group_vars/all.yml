@@ -1,63 +1,64 @@
 default_roles:
-  - system
-  - 1password
-  - aldente
-  - asciiquarium
-  - awesomewm
-  - bash
-  - bat
-  - borders
-  - btop
-  - bun
-  - claude
-  - codex
-  # - docker
-  - flatpak
-  - fonts
-  - fzf
-  - gh
-  - ghostty
-  - git
-  - go
-  - hammerspoon
-  - helm
-  - jj
-  - k8s
-  - k9s
-  - kitty
-  - lazygit
-  - lsd
-  - lua
-  - nala
-  - ncdu
-  - neofetch
-  - neovim
-  - nerdfetch
-  - nvm  # Must run before npm
-  - npm
-  - obsidian
-  - opencode
-  - podman
-  - pwsh
-  - python
-  - raycast
-  # - ruby
-  # - rust
-  - slides
-  - spotify
-  - superwhisper
-  - ssh
-  - sshfs
-  - starship
-  - taskfile
-  - terraform
-  - terragrunt
-  - tldr
-  - tmate
-  - tmux
-  - sesh
-  - zoxide
-  - zsh
+- system
+- 1password
+- aldente
+- asciiquarium
+- awesomewm
+- bash
+- bat
+- borders
+- btop
+- bun
+- claude
+- codex
+# - docker
+- flatpak
+- fonts
+- fzf
+- gh
+- ghostty
+- git
+- go
+- hammerspoon
+- helm
+- intellij
+- jj
+- k8s
+- k9s
+- kitty
+- lazygit
+- lsd
+- lua
+- nala
+- ncdu
+- neofetch
+- neovim
+- nerdfetch
+- nvm # Must run before npm
+- npm
+- obsidian
+- opencode
+- podman
+- pwsh
+- python
+- raycast
+# - ruby
+# - rust
+- slides
+- spotify
+- superwhisper
+- ssh
+- sshfs
+- starship
+- taskfile
+- terraform
+- terragrunt
+- tldr
+- tmate
+- tmux
+- sesh
+- zoxide
+- zsh
 
 git_user_name: "TechDufus"
 op:
@@ -70,22 +71,22 @@ op:
       vault: "Private"
       item: "BerkeleyMono Fonts"
       files:
-        - field: BerkeleyMonoNerdFont-Regular
-          filename: BerkeleyMonoNerdFont-Regular.otf
-        - field: BerkeleyMonoNerdFont-Italic
-          filename: BerkeleyMonoNerdFont-Italic.otf
-        - field: BerkeleyMonoNerdFont-Bold
-          filename: BerkeleyMonoNerdFont-Bold.otf
-        - field: BerkeleyMonoNerdFont-BoldItalic
-          filename: BerkeleyMonoNerdFont-BoldItalic.otf
+      - field: BerkeleyMonoNerdFont-Regular
+        filename: BerkeleyMonoNerdFont-Regular.otf
+      - field: BerkeleyMonoNerdFont-Italic
+        filename: BerkeleyMonoNerdFont-Italic.otf
+      - field: BerkeleyMonoNerdFont-Bold
+        filename: BerkeleyMonoNerdFont-Bold.otf
+      - field: BerkeleyMonoNerdFont-BoldItalic
+        filename: BerkeleyMonoNerdFont-BoldItalic.otf
   ssh:
     github:
       techdufus:
-        - name: id_ed25519
-          vault_path: "op://Personal/TechDufus SSH"
-        - name: raft-infra
-          vault_path: "op://Raft/Raft-SSH"
-# FIXME: See `system/tasks/main.yml` for how to structure this var looping.
+      - name: id_ed25519
+        vault_path: "op://Personal/TechDufus SSH"
+      - name: raft-infra
+        vault_path: "op://Raft/Raft-SSH"
+  # FIXME: See `system/tasks/main.yml` for how to structure this var looping.
   # system:
   #   hosts:
   #     - item: op://Raft/rdp-demo-local-ingress/notesPlain
@@ -97,20 +98,20 @@ k8s:
 
 helm:
   repos:
-    - name: traefik
-      url: https://helm.traefik.io/traefik
+  - name: traefik
+    url: https://helm.traefik.io/traefik
 
 go:
   packages:
-    - package: github.com/go-task/task/v3/cmd/task@latest
-      cmd: task
-    - package: github.com/joshmedeski/sesh/v2@latest
-      cmd: sesh
-    # LSP servers for OpenCode
-    - package: golang.org/x/tools/gopls@latest
-      cmd: gopls
-    - package: github.com/mrjosh/helm-ls@latest
-      cmd: helm-ls
-    # NOTE: termshark has dependency issues with v2.4.0
-    # - package: github.com/stillmatic/chat@latest
-    #   cmd: chat
+  - package: github.com/go-task/task/v3/cmd/task@latest
+    cmd: task
+  - package: github.com/joshmedeski/sesh/v2@latest
+    cmd: sesh
+  # LSP servers for OpenCode
+  - package: golang.org/x/tools/gopls@latest
+    cmd: gopls
+  - package: github.com/mrjosh/helm-ls@latest
+    cmd: helm-ls
+  # NOTE: termshark has dependency issues with v2.4.0
+  # - package: github.com/stillmatic/chat@latest
+  #   cmd: chat

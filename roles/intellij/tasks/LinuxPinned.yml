@@ -1,0 +1,133 @@
+---
+- name: "IntelliJ | Linux | Detect desktop environment"
+  ansible.builtin.command: systemctl get-default
+  register: intellij_systemd_target
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: "IntelliJ | Linux | Set desktop environment fact"
+  ansible.builtin.set_fact:
+    intellij_is_desktop: "{{ intellij_systemd_target.stdout == 'graphical.target' and not ansible_host_environment_is_wsl }}"
+
+- name: "IntelliJ | Linux | Resolve and install pinned IntelliJ"
+  when: intellij_is_desktop
+  block:
+  - name: "IntelliJ | Linux | Set IntelliJ metadata facts"
+    ansible.builtin.set_fact:
+      intellij_product_code: "{{ 'IIC' if intellij_edition == 'community' else 'IIU' }}"
+      intellij_linux_download_key: "{{ 'linuxARM64' if ansible_facts['architecture'] in ['aarch64', 'arm64'] else 'linux' }}"
+      intellij_version_query: "{{ intellij_version | regex_replace('\\.x$', '') }}"
+
+  - name: "IntelliJ | Linux | Fetch JetBrains release metadata"
+    ansible.builtin.uri:
+      url: "https://data.services.jetbrains.com/products/releases?code={{ intellij_product_code }}&version={{ intellij_version_query }}&type=release"
+      return_content: true
+    register: intellij_release_metadata
+    changed_when: false
+
+  - name: "IntelliJ | Linux | Build release link list"
+    ansible.builtin.set_fact:
+      intellij_release_links: >-
+        {{
+          intellij_release_metadata.json[intellij_product_code]
+          | map(attribute='downloads')
+          | map(attribute=intellij_linux_download_key)
+          | map(attribute='link')
+          | list
+        }}
+
+  - name: "IntelliJ | Linux | Set version match string"
+    ansible.builtin.set_fact:
+      intellij_version_match: >-
+        {{
+          (intellij_version | regex_replace('\\.x$', '')) ~ '.'
+          if intellij_version is match('^[0-9]{4}\\.[0-9]+(\\.x)?$')
+          else intellij_version
+        }}
+
+  - name: "IntelliJ | Linux | Select matching release download"
+    ansible.builtin.set_fact:
+      intellij_download_url: "{{ (intellij_release_links | select('search', intellij_version_match) | list | first) | default('') }}"
+
+  - name: "IntelliJ | Linux | Validate selected release"
+    ansible.builtin.assert:
+      that:
+      - intellij_download_url != ''
+      fail_msg: "Unable to resolve IntelliJ version '{{ intellij_version }}' for edition '{{ intellij_edition }}'"
+
+  - name: "IntelliJ | Linux | Extract resolved IntelliJ version"
+    ansible.builtin.set_fact:
+      intellij_resolved_version: "{{ intellij_download_url | regex_replace('^.*-([0-9][0-9.]+)(?:-aarch64)?\\.tar\\.gz$', '\\1') }}"
+
+  - name: "IntelliJ | Linux | Create local directories"
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: directory
+      mode: "0755"
+    loop:
+    - "{{ ansible_facts['user_dir'] }}/.local"
+    - "{{ ansible_facts['user_dir'] }}/.local/bin"
+    - "{{ ansible_facts['user_dir'] }}/.local/opt"
+
+  - name: "IntelliJ | Linux | Set installation paths"
+    ansible.builtin.set_fact:
+      intellij_install_dir: "{{ ansible_facts['user_dir'] }}/.local/opt/intellij-{{ intellij_edition }}-{{ intellij_resolved_version }}"
+      intellij_current_link: "{{ ansible_facts['user_dir'] }}/.local/opt/intellij-{{ intellij_edition }}"
+      intellij_archive_path: "/tmp/intellij-{{ intellij_edition }}-{{ intellij_resolved_version }}.tar.gz"
+
+  - name: "IntelliJ | Linux | Check if target version already exists"
+    ansible.builtin.stat:
+      path: "{{ intellij_install_dir }}/bin/idea.sh"
+    register: intellij_install_stat
+
+  - name: "IntelliJ | Linux | Download IntelliJ archive"
+    ansible.builtin.get_url:
+      url: "{{ intellij_download_url }}"
+      dest: "{{ intellij_archive_path }}"
+      mode: "0644"
+      force: true
+    when: not intellij_install_stat.stat.exists
+
+  - name: "IntelliJ | Linux | Ensure clean installation directory"
+    ansible.builtin.file:
+      path: "{{ intellij_install_dir }}"
+      state: absent
+    when: not intellij_install_stat.stat.exists
+
+  - name: "IntelliJ | Linux | Create installation directory"
+    ansible.builtin.file:
+      path: "{{ intellij_install_dir }}"
+      state: directory
+      mode: "0755"
+    when: not intellij_install_stat.stat.exists
+
+  - name: "IntelliJ | Linux | Extract IntelliJ archive"
+    ansible.builtin.unarchive:
+      src: "{{ intellij_archive_path }}"
+      dest: "{{ intellij_install_dir }}"
+      remote_src: true
+      extra_opts:
+      - --strip-components=1
+    when: not intellij_install_stat.stat.exists
+
+  - name: "IntelliJ | Linux | Link active IntelliJ version"
+    ansible.builtin.file:
+      src: "{{ intellij_install_dir }}"
+      dest: "{{ intellij_current_link }}"
+      state: link
+      force: true
+
+  - name: "IntelliJ | Linux | Link IntelliJ launcher"
+    ansible.builtin.file:
+      src: "{{ intellij_current_link }}/bin/idea.sh"
+      dest: "{{ ansible_facts['user_dir'] }}/.local/bin/idea"
+      state: link
+      force: true
+
+  always:
+  - name: "IntelliJ | Linux | Cleanup downloaded archive"
+    ansible.builtin.file:
+      path: "{{ intellij_archive_path | default('') }}"
+      state: absent
+    failed_when: false

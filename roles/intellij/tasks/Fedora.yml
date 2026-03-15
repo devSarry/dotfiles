@@ -1,0 +1,49 @@
+---
+- name: "IntelliJ | Fedora | Validate IntelliJ edition"
+  ansible.builtin.assert:
+    that:
+    - intellij_edition in ['community', 'ultimate']
+    - intellij_version == 'latest' or intellij_version is match('^[0-9]{4}\\.[0-9]+(\\.(x|[0-9]+(\\.[0-9]+)?))?$')
+    fail_msg: "intellij_edition must be 'community' or 'ultimate', and intellij_version must be latest, 2025.2, 2025.2.x, or 2025.2.4"
+
+- name: "IntelliJ | Fedora | Install flatpak"
+  ansible.builtin.package:
+    name: flatpak
+    state: present
+  when: intellij_version == 'latest'
+  become: true
+
+- name: "IntelliJ | Fedora | Add Flathub remote"
+  community.general.flatpak_remote:
+    name: flathub
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+    state: present
+  when: intellij_version == 'latest'
+  become: true
+
+- name: "IntelliJ | Fedora | Detect desktop environment"
+  ansible.builtin.command: systemctl get-default
+  register: intellij_systemd_target
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: intellij_version == 'latest'
+
+- name: "IntelliJ | Fedora | Set desktop environment fact"
+  ansible.builtin.set_fact:
+    intellij_is_desktop: "{{ intellij_systemd_target.stdout == 'graphical.target' and not ansible_host_environment_is_wsl }}"
+  when: intellij_version == 'latest'
+
+- name: "IntelliJ | Fedora | Install IntelliJ IDEA"
+  community.general.flatpak:
+    name: "{{ 'com.jetbrains.IntelliJ-IDEA-Community' if intellij_edition == 'community' else 'com.jetbrains.IntelliJ-IDEA-Ultimate' }}"
+    state: present
+    remote: flathub
+  when:
+  - intellij_version == 'latest'
+  - intellij_is_desktop
+  become: true
+
+- name: "IntelliJ | Fedora | Install pinned IntelliJ release"
+  ansible.builtin.include_tasks: LinuxPinned.yml
+  when: intellij_version != 'latest'
