@@ -297,7 +297,7 @@ cp ~/.dotfiles/group_vars/all.yml ~/all.yml.backup
 rm -rf ~/.dotfiles
 
 # Re-run installation
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/TechDufus/dotfiles/main/bin/dotfiles)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/devSarry/dotfiles/main/bin/dotfiles)"
 
 # Restore your config
 cp ~/all.yml.backup ~/.dotfiles/group_vars/all.yml

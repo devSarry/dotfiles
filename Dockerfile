@@ -1,39 +1,37 @@
-FROM ubuntu:22.04
+FROM fedora:42
 
 LABEL maintainer="TechDufus <https://techdufus.com>"
 
 ARG USER=techdufus
 ARG group=techdufus
 ARG uid=1000
-ARG DEBIAN_FRONTEND=noninteractive
 
 ENV TZ="America/Chicago"
+ENV LANG="en_US.UTF-8"
+ENV LC_ALL="en_US.UTF-8"
 
-USER ${USER}
 USER root
 
-RUN apt-get update && \
-  apt-get upgrade -y && \
-  apt-get install -y \
+RUN dnf -y upgrade --refresh && \
+  dnf -y install \
   sudo \
   curl \
-  git-core \
-  gnupg \
-  locales \
+  git \
+  gnupg2 \
+  glibc-langpack-en \
   tzdata \
-  wget && \
-  apt-get autoremove -y
+  wget \
+  ncurses && \
+  dnf clean all
 
-RUN locale-gen en_US.UTF-8
-
-RUN adduser --quiet --disabled-password \
-  --shell /bin/bash --home /home/${USER} \
-  --gecos "User" ${USER}
+RUN groupadd --gid ${uid} ${group} && \
+  useradd --uid ${uid} --gid ${group} --create-home --home-dir /home/${USER} --shell /bin/bash ${USER}
 
 RUN mkdir -p /etc/sudoers.d && \
   touch /etc/sudoers.d/${USER} && \
   echo "%${group} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/${USER} && \
-  groupadd docker && \
+  chmod 0440 /etc/sudoers.d/${USER} && \
+  groupadd -f docker && \
   usermod -aG docker ${USER}
 
 RUN chown -R ${USER}:${group} /home/${USER}
@@ -46,8 +44,8 @@ RUN \
   touch /home/${USER}/.ansible-vault/vault.secret && \
   echo '$vault_secret' > /home/${USER}/.ansible-vault/vault.secret
 
-# RUN bash -c "$(curl -fsSL https://raw.githubusercontent.com/TechDufus/dotfiles/main/bin/dotfiles)"
-RUN git clone --quiet https://github.com/TechDufus/dotfiles.git /home/${USER}/.dotfiles
+# RUN bash -c "$(curl -fsSL https://raw.githubusercontent.com/devSarry/dotfiles/main/bin/dotfiles)"
+RUN git clone --quiet https://github.com/devSarry/dotfiles.git /home/${USER}/.dotfiles
 COPY --chown=${USER}:${group} ansible.cfg /home/${USER}/.dotfiles/ansible.cfg
 RUN bash -c "/home/${USER}/dotfiles"
 

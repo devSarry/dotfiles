@@ -109,6 +109,7 @@ OP_INSTALLED=false
 OP_AUTHENTICATED=false
 DOTFILES_LOG="$HOME/.dotfiles.log"
 DOTFILES_DIR="$HOME/.dotfiles"
+DOTFILES_REPO_URL="https://github.com/devSarry/dotfiles.git"
 IS_FIRST_RUN="$HOME/.dotfiles_run"
 DOTFILES_VERSION="1.0.0"
 # Spinner PID tracking
@@ -148,7 +149,7 @@ show_help() {
   echo "    All arguments not recognized by dotfiles are passed to ansible-playbook."
   echo "    Common options: -t <tags>, --check, -vvv, --list-tags"
   echo ""
-  echo -e "${CAT_SUBTEXT0}For more information: https://github.com/TechDufus/dotfiles${NC}"
+  echo -e "${CAT_SUBTEXT0}For more information: https://github.com/devSarry/dotfiles${NC}"
 }
 
 # Show version information
@@ -452,10 +453,11 @@ esac
 
 if ! [[ -d "$DOTFILES_DIR" ]]; then
   __task "Downloading dotfiles repository (This may take a minute)"
-  _cmd "git clone --quiet https://github.com/TechDufus/dotfiles.git $DOTFILES_DIR"
+  _cmd "git clone --quiet $DOTFILES_REPO_URL $DOTFILES_DIR"
   _task_done
 else
   __task "Updating dotfiles repository"
+  _cmd "git -C $DOTFILES_DIR remote set-url origin $DOTFILES_REPO_URL || git -C $DOTFILES_DIR remote add origin $DOTFILES_REPO_URL"
   _cmd "git -C $DOTFILES_DIR pull --quiet"
   _task_done
 fi

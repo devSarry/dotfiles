@@ -68,7 +68,7 @@ Make sure you have a stable internet connection - we'll be downloading lots of t
 Now for the magic! One command installs everything:
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/TechDufus/dotfiles/main/bin/dotfiles)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/devSarry/dotfiles/main/bin/dotfiles)"
 ```
 
 ### What You'll See
