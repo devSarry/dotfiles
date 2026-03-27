@@ -303,6 +303,47 @@ dotfiles -t t<tab>
 dotfiles -t ne<tab>
 ```
 
+### Container Testing
+
+If you are developing a new role and do not want to test against your real machine, you can use the included dev container.
+
+The container copies your current local checkout into `~/.dotfiles` each time it starts, then drops you into a shell there. That gives you an isolated Linux environment while still testing your working tree instead of whatever is on GitHub.
+
+Build the image once:
+
+```bash
+task docker-build
+```
+
+Start a shell in the container with your current repo mounted:
+
+```bash
+task docker-shell
+```
+
+Inside the container, run Ansible directly:
+
+```bash
+ansible-playbook main.yml --syntax-check
+ansible-playbook main.yml -t your-role --check
+ansible-playbook main.yml -t your-role
+```
+
+If you prefer one-shot helpers instead of opening a shell first:
+
+```bash
+task docker-syntax
+task docker-role-check ROLE=git
+task docker-role-run ROLE=git
+```
+
+Notes:
+
+- The container startup sync mirrors your local checkout into the container on every run.
+- The sync excludes `.git` and common cache directories.
+- The helper tasks mount the workspace with SELinux relabeling (`:Z`) so Podman can read files from your home directory.
+- This is best for Linux-oriented role development. It will not faithfully test macOS-only, WSL-only, GUI-heavy, or host-integration-specific behavior.
+
 ## 📚 Documentation
 
 - [📖 Complete Beginner Guide](docs/QUICKSTART.md) - Step-by-step setup for new users
