@@ -18,16 +18,25 @@ USER root
 
 RUN dnf -y upgrade --refresh && \
   dnf -y install \
+  ansible-core \
   sudo \
   curl \
   git \
   gnupg2 \
   glibc-langpack-en \
+  python3 \
   tzdata \
   wget \
   ncurses \
   rsync && \
   dnf clean all
+
+COPY requirements /tmp/dotfiles-requirements
+
+RUN ansible-galaxy collection install \
+  -r /tmp/dotfiles-requirements/common.yml \
+  -p /usr/share/ansible/collections && \
+  rm -rf /tmp/dotfiles-requirements
 
 RUN groupadd --gid ${uid} ${group} && \
   useradd --uid ${uid} --gid ${group} --create-home --home-dir /home/${USER} --shell /bin/bash ${USER}

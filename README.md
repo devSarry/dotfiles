@@ -329,6 +329,41 @@ ansible-playbook main.yml -t your-role --check
 ansible-playbook main.yml -t your-role
 ```
 
+To test a temporary basic setup without changing your host machine, open a shell with `task docker-shell`, then edit `~/.dotfiles/group_vars/all.yml` inside the container and run the playbook there.
+
+Example minimal config for the container:
+
+```yaml
+default_roles:
+  - system
+  - git
+  - zsh
+  - neovim
+  - tmux
+  - fzf
+  - bat
+  - lsd
+  - starship
+  - fonts
+
+git_user_name: "Adam Smith"
+```
+
+Then test it in stages:
+
+```bash
+cd ~/.dotfiles
+ansible-playbook main.yml --syntax-check
+ansible-playbook main.yml --check
+ansible-playbook main.yml
+```
+
+Notes:
+
+- The Fedora `system` role skips host-only `systemd` and kernel-tuning tasks when running inside the dev container.
+- The `fonts` role depends on 1Password for private font files, so it will skip cleanly unless `op` is installed and authenticated in the container.
+- Changes made under `~/.dotfiles` in the container are disposable and do not modify your host system unless you copy them back out manually.
+
 If you prefer one-shot helpers instead of opening a shell first:
 
 ```bash

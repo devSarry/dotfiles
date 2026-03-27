@@ -1,0 +1,14 @@
+---
+- name: Detect containerized execution
+  ansible.builtin.set_fact:
+    ansible_host_environment_is_container: >-
+      {{
+        (ansible_facts.get('virtualization_type', '') in ['container', 'docker', 'containerd', 'podman', 'lxc']) or
+        (ansible_facts.get('env', {}).get('container', '') | lower in ['docker', 'podman'])
+      }}
+
+- name: Report container detection
+  ansible.builtin.debug:
+    var: ansible_host_environment_is_container
+  tags:
+  - always
