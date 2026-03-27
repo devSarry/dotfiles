@@ -1,0 +1,34 @@
+---
+- name: Initialize Bitwarden facts
+  ansible.builtin.set_fact:
+    bw_installed: false
+    bw_authenticated: false
+
+- name: Detect Bitwarden CLI
+  ansible.builtin.command:
+    cmd: which bw
+  changed_when: false
+  failed_when: false
+  register: bw_binary_check
+
+- name: Register Bitwarden installation state
+  ansible.builtin.set_fact:
+    bw_installed: "{{ bw_binary_check.rc == 0 }}"
+
+- name: Detect Bitwarden authentication state
+  ansible.builtin.command:
+    argv:
+    - bw
+    - status
+  changed_when: false
+  failed_when: false
+  register: bw_status
+  when: bw_installed
+
+- name: Register Bitwarden authentication state
+  ansible.builtin.set_fact:
+    bw_authenticated: "{{ ((bw_status.stdout | default('{}')) | from_json).status == 'unlocked' }}"
+  when:
+  - bw_installed
+  - bw_status.rc == 0
+  - (bw_status.stdout | default('')) | length > 0
